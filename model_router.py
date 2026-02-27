@@ -54,3 +54,5 @@ def groq_chat(history):
 
     except Exception as e:
         return f"⚠️ Groq error: {str(e)}"
+
+print("API:", api_key)
