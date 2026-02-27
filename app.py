@@ -9,7 +9,7 @@ from model_router import local_chat, groq_chat
 # ==============================
 st.set_page_config(page_title="Chatbot")
 
-st.title("💬 Chatbot (Local + Groq)")
+st.title("BUDDY")
 
 # ==============================
 # DETECT CLOUD ENVIRONMENT
