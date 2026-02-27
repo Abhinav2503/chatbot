@@ -1,9 +1,11 @@
 import streamlit as st
 import os
+import zipfile
+from io import BytesIO
 from model_router import local_chat, groq_chat
 
 # ==============================
-# PAGE CONFIG
+# PAGE CONFIG (MUST BE FIRST)
 # ==============================
 st.set_page_config(page_title="Chatbot")
 
@@ -23,19 +25,40 @@ if "history" not in st.session_state:
 # ==============================
 # SIDEBAR
 # ==============================
-mode = st.sidebar.radio(
-    "Select Mode",
-    ["Local LLM", "Groq API"]
-)
+mode = st.sidebar.radio("Select Mode", ["Local LLM", "Groq API"])
 
 # Clear chat button
 if st.sidebar.button("🧹 Clear Chat"):
     st.session_state.history = []
     st.rerun()
 
-# Show warning if Local LLM selected in cloud
+# ==============================
+# DOWNLOAD PROJECT BUTTON
+# ==============================
+def create_zip():
+    buffer = BytesIO()
+    with zipfile.ZipFile(buffer, "w") as z:
+        for file in ["app.py", "model_router.py", "requirements.txt"]:
+            if os.path.exists(file):
+                z.write(file)
+    buffer.seek(0)
+    return buffer
+
+st.sidebar.download_button(
+    "⬇️ Download project to run locally",
+    data=create_zip(),
+    file_name="chatbot_project.zip",
+    mime="application/zip"
+)
+
+# ==============================
+# LOCAL LLM WARNING (CLOUD)
+# ==============================
 if mode == "Local LLM" and is_cloud:
-    st.sidebar.warning("⚠️ Local LLM works only on local machine. Use Groq API in cloud.")
+    st.sidebar.warning(
+        "⚠️ Local LLM works only on local machine.\n\n"
+        "Download project and run locally with Ollama."
+    )
 
 # ==============================
 # DISPLAY CHAT HISTORY
@@ -56,10 +79,9 @@ if prompt:
     with st.chat_message("user"):
         st.write(prompt)
 
-    # Generate response
+    # Generate assistant response
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-
             if mode == "Local LLM":
                 reply = local_chat(st.session_state.history)
             else:
@@ -67,5 +89,5 @@ if prompt:
 
             st.write(reply)
 
-    # Save assistant response
+    # Save assistant reply
     st.session_state.history.append({"role": "assistant", "content": reply})
